@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://telegram.org"></script>
+    <link href="https://googleapis.com" rel="stylesheet">
+    <title>ZOKHA SHOP</title>
+    <style>
+        :root {
+            --accent: #f3ba2f; /* Золотой Stars */
+            --premium: #0088cc; /* Синий Premium */
+            --bg: #050505;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            background: var(--bg);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            overflow-x: hidden;
+            background: radial-gradient(circle at top right, #1a1500, #050505);
+        }
+
+        /* Анимация появления */
+        .fade-in { animation: fadeIn 0.6s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .header {
+            padding: 40px 20px;
+            text-align: center;
+            background: linear-gradient(180deg, rgba(243, 186, 47, 0.05) 0%, transparent 100%);
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -1.5px;
+            text-transform: uppercase;
+        }
+
+        .header span { color: var(--accent); text-shadow: 0 0 20px rgba(243, 186, 47, 0.5); }
+
+        .container { padding: 0 16px 40px; }
+
+        /* Карточка баланса */
+        .balance-box {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 24px;
+            margin-top: -30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        .balance-info div { font-size: 13px; color: #888; margin-bottom: 4px; }
+        .balance-info b { font-size: 28px; font-weight: 800; color: var(--accent); }
+
+        .deposit-btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+
+        .deposit-btn:active { transform: scale(0.9); opacity: 0.8; }
+
+        /* Секции и Грид */
+        .section-label {
+            font-size: 12px;
+            font-weight: 800;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 35px 0 15px 5px;
+        }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 18px;
+            position: relative;
+            transition: 0.3s;
+            text-align: left;
+        }
+
+        .card:active { background: rgba(255,255,255,0.08); border-color: var(--accent); }
+
+        .card-name { font-size: 16px; font-weight: 600; margin-bottom: 8px; display: block; }
+        .card-price { font-size: 18px; font-weight: 800; color: #fff; }
+        .card-old-price { font-size: 12px; color: #555; text-decoration: line-through; margin-left: 6px; font-weight: 400; }
+
+        .buy-tag {
+            position: absolute;
+            bottom: 18px;
+            right: 18px;
+            background: var(--accent);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-weight: bold;
+        }
+
+        /* Премиум стиль */
+        .premium-card { border-left: 3px solid var(--premium); }
+        .premium-card .buy-tag { background: var(--premium); color: #fff; }
+
+        /* Спиннер загрузки */
+        #loader {
+            position: fixed; top:0; left:0; width:100%; height:100%; 
+            background: var(--bg); z-index: 9999; display: flex; justify-content: center; align-items: center;
+        }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(243,186,47,0.1); border-top: 4px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div id="loader"><div class="spinner"></div></div>
+
+<div class="header fade-in">
+    <h1>ZOKHA <span>SHOP</span></h1>
+</div>
+
+<div class="container fade-in">
+    <div class="balance-box">
+        <div class="balance-info">
+            <div>Доступный баланс</div>
+            <b id="user-balance">0.00 ₽</b>
+        </div>
+        <button class="deposit-btn" onclick="tgDeposit()">+</button>
+    </div>
+
+    <div class="section-label">Telegram Stars ⭐</div>
+    <div class="grid">
+        <div class="card" onclick="processOrder('50 Stars', 99)">
+            <span class="card-name">50 Stars</span>
+            <span class="card-price">99 ₽</span>
+            <div class="buy-tag">→</div>
+        </div>
+        <div class="card" onclick="processOrder('100 Stars', 180)">
+            <span class="card-name">100 Stars</span>
+            <span class="card-price">180 ₽ <span class="card-old-price">198</span></span>
+            <div class="buy-tag">→</div>
+        </div>
+        <div class="card" onclick="processOrder('500 Stars', 850)">
+            <span class="card-name">500 Stars</span>
+            <span class="card-price">850 ₽ <span class="card-old-price">990</span></span>
+            <div class="buy-tag">→</div>
+        </div>
+        <div class="card" onclick="processOrder('1000 Stars', 1650)">
+            <span class="card-name">1000 Stars</span>
+            <span class="card-price">1650 ₽ <span class="card-old-price">1980</span></span>
+            <div class="buy-tag">→</div>
+        </div>
+    </div>
+
+    <div class="section-label">Telegram Premium 💎</div>
+    <div class="grid">
+        <div class="card premium-card" onclick="processOrder('Premium 3 мес.', 399)">
+            <span class="card-name">3 Месяца</span>
+            <span class="card-price">399 ₽</span>
+            <div class="buy-tag">→</div>
+        </div>
+        <div class="card premium-card" onclick="processOrder('Premium 1 год', 1399)">
+            <span class="card-name">1 Год</span>
+            <span class="card-price">1399 ₽ <span class="card-old-price">1596</span></span>
+            <div class="buy-tag">→</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    const API_URL = "http://ТВОЙ_IP:8000"; // ЗАМЕНИ НА IP СЕРВЕРА
+    let currentBalance = 0;
+
+    async function loadData() {
+        try {
+            const userId = tg.initDataUnsafe.user.id;
+            const res = await fetch(`${API_URL}/get_balance?uid=${userId}`);
+            const data = await res.json();
+            currentBalance = data.balance;
+            document.getElementById('user-balance').innerText = currentBalance.toFixed(2) + " ₽";
+        } catch (e) {
+            console.error("Ошибка загрузки баланса");
+        } finally {
+            document.getElementById('loader').style.display = 'none';
+        }
+    }
+
+    async function processOrder(item, price) {
+        if (currentBalance < price) {
+            tg.showPopup({
+                title: 'Ой!',
+                message: 'Недостаточно средств. Пополни баланс!',
+                buttons: [{type: 'ok', text: 'Понятно'}]
+            });
+            return;
+        }
+
+        tg.showConfirm(`Купить ${item} за ${price}₽?`, async (ok) => {
+            if (ok) {
+                tg.MainButton.showProgress();
+                try {
+                    const response = await fetch(`${API_URL}/buy`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            uid: tg.initDataUnsafe.user.id,
+                            username: tg.initDataUnsafe.user.username || "no_name",
+                            item: item,
+                            price: price
+                        })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        tg.showAlert("✅ Успешно! Ожидайте выдачи товара в боте.");
+                        loadData();
+                    } else {
+                        tg.showAlert("❌ Ошибка списания.");
+                    }
+                } catch (e) {
+                    tg.showAlert("❌ Ошибка связи с сервером.");
+                } finally {
+                    tg.MainButton.hideProgress();
+                }
+            }
+        });
+    }
+
+    function tgDeposit() {
+        tg.sendData("deposit"); // Бот поймает это событие и предложит оплату
+        tg.close();
+    }
+
+    tg.ready();
+    tg.expand();
+    loadData();
+</script>
+</body>
+</html>
